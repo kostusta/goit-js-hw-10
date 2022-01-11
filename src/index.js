@@ -37,6 +37,7 @@ function clearContent() {
 
 function responseHandler(data) {
   if (data.status === 404) {
+    clearContent()
     Notify.failure('Oops, there is no country with that name');
   }
 
