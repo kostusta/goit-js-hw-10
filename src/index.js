@@ -14,73 +14,58 @@ const refs = {
   countryInfo: document.querySelector('.country-info'),
 };
 
-console.dir(refs.input.value);
-
-refs.input.addEventListener('input', debounce(inputHandler, DEBOUNCE_DELAY));
-
-function inputHandler() {
-  let countryQueryNmae = refs.input.value.trim();
-  // console.log(countryQueryNmae);
-
-  if (!countryQueryNmae) {
-    // console.log('empty')
-    return;
-  }
-
-  fetchCountries(countryQueryNmae)
-    .then(responce => responseLengthHandler(responce))
-    .then(markup => {
-      refs.countryList.innerHTML = `${markup}`;
-    });
-}
-
-// fetchCountries(countryQueryNmae)
-//     .then(data => countryCardMarkup(data[0]))
-//     .then(markup => {
-//       refs.countryList.innerHTML = `${markup}`;
-//     })
-
-// function makeCountryMarkup(county) {
-//   return `<img class="country-flag" src=${county.flags}>
-//   <p class="country-name">${county.name}</p>
-//   <p class="coutry-capital">${county.capital}</p>
-//   <p class="country-population">${county.population}</p>
-//   <p class="country-langugage">${county.langugage}</p>`;
-// }
-
-// const country = [
-//   {
-//     capital: 'Kyiv',
-//     // flags: { svg: 'https://flagcdn.com/ua.svg', png: 'https://flagcdn.com/w320/ua.png' },
-//     // languages: [{ iso639_1: 'uk', iso639_2: 'ukr', name: 'Ukrainian', nativeName: 'Українська' }],
-//     name: 'Ukraine',
-//     population: 44134693,
-//   },
-// ];
-
-function countryCardMarkup(data) {
+function countryCardMarkupGenerate(data) {
   return countyCardTemplate(data[0]);
 }
 
-function countriesListMarkup(data) {
+function countriesListMarkupGenerate(data) {
   return data.map(item => countiesListTemplate(item)).join('');
 }
 
-function responseLengthHandler(responce) {
-  if (responce.length === 1) {
-    console.log(responce.length);
-    return countryCardMarkup(responce);
+function countryCardMarkupRender(markup) {
+  refs.countryInfo.insertAdjacentHTML('beforeend', `${markup}`);
+}
+
+function countriesListMarkupRender(markup) {
+  refs.countryList.insertAdjacentHTML('beforeend', `${markup}`);
+}
+
+function clearContent() {
+  refs.countryInfo.innerHTML = '';
+  refs.countryList.innerHTML = '';
+}
+
+function responseHandler(data) {
+  if (data.status === 404) {
+    Notify.failure('Oops, there is no country with that name');
   }
 
-  if (responce.length >= 10) {
-    console.log(responce.length);
+  if (data.length >= 10) {
     Notify.info('Too many matches found. Please enter a more specific name.');
   }
 
-  if (responce.length >= 2 && responce.length <= 10) {
-    console.log(responce.length);
-    return countriesListMarkup(responce);
+  if (data.length >= 2 && data.length <= 10) {
+    clearContent();
+    const countryListMarkup = countriesListMarkupGenerate(data);
+    countriesListMarkupRender(countryListMarkup);
+  }
+
+  if (data.length === 1) {
+    clearContent();
+    const countryCardMarkup = countryCardMarkupGenerate(data);
+    countryCardMarkupRender(countryCardMarkup);
   }
 }
 
-// queryMarkup(country);
+function inputHandler() {
+  let countryQueryNmae = refs.input.value.trim();
+
+  if (!countryQueryNmae) {
+    clearContent();
+    return;
+  }
+
+  fetchCountries(countryQueryNmae).then(data => responseHandler(data));
+}
+
+refs.input.addEventListener('input', debounce(inputHandler, DEBOUNCE_DELAY));
