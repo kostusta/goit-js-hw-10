@@ -37,7 +37,7 @@ function clearContent() {
 
 function responseHandler(data) {
   if (data.status === 404) {
-    clearContent()
+    clearContent();
     Notify.failure('Oops, there is no country with that name');
   }
 
@@ -66,7 +66,9 @@ function inputHandler() {
     return;
   }
 
-  fetchCountries(countryQueryNmae).then(data => responseHandler(data));
+  fetchCountries(countryQueryNmae)
+    .then(data => responseHandler(data))
+    .catch(error => console.log(error));
 }
 
 refs.input.addEventListener('input', debounce(inputHandler, DEBOUNCE_DELAY));
